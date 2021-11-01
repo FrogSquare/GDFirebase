@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.frogsquare.firebasestorage">
+
+    <application>
+
+        <!-- Storage -->
+        <service android:name="com.frogsquare.firebasestorage.DownloadService"
+            android:exported="false"/>
+
+        <service android:name="com.frogsquare.firebasestorage.UploadService"
+            android:exported="false"/>
+        <!-- Storage -->
+
+        <meta-data
+            android:name="org.godotengine.plugin.v1.GDFirebaseStorage"
+            android:value="com.frogsquare.firebasestorage.GDFirebaseStorage" />
+
+    </application>
+
+</manifest>

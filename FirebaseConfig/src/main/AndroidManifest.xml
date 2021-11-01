@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.frogsquare.firebaseconfig">
+
+    <application>
+
+        <meta-data
+            android:name="org.godotengine.plugin.v1.GDFirebaseConfig"
+            android:value="com.frogsquare.firebaseconfig.GDFirebaseConfig" />
+
+    </application>
+
+</manifest>

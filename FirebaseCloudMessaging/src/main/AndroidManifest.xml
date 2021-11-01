@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.frogsquare.firebasecm">
+
+    <application>
+
+        <service
+            android:name=".MessagingService"
+            android:exported="false"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="org.godotengine.plugin.v1.GDFirebaseCloudMessaging"
+            android:value="com.frogsquare.firebasecm.GDFirebaseCloudMessaging" />
+
+    </application>
+
+</manifest>

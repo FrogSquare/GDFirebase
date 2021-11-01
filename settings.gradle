@@ -1,0 +1,18 @@
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        jcenter() // Warning: this repository is going to shut down soon
+    }
+}
+rootProject.name = "Godot FireBase Plugin"
+include ':app'
+include ':Firebase'
+include ':FirebaseAdmob'
+include ':FirebaseAuth'
+include ':FirebaseConfig'
+include ':FirebaseCloudMessaging'
+include ':FirebaseStorage'
+include ':FirebaseInAppMessaging'
+include ':FirebaseFirestore'
