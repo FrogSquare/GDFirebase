@@ -1,5 +1,4 @@
-
-#GDFirebase
+# GDFirebase
 	GDFirebase is a Modular Godot Plugin for using Firebase
 
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://github.com/FrogSquare/GDFirebase)
@@ -72,7 +71,7 @@ Now Edit your `[GAME-PROJECT]/android/build/res/values/ids.xml` file and add
     <string name="fb_login_protocol_scheme">fb[APPLICATION_ID]</string>
 ```
 
-####Analytcis
+#### Analytcis
 
 ```
     func _ready():
@@ -155,7 +154,7 @@ fun createNotificationChannel({
 })
 ```
 
-####AdMob
+#### AdMob
 ```
     func _ready():
         if Engine.has_singleton("GDFirebaseAdmob"):
