@@ -18,7 +18,7 @@ import org.godotengine.godot.Dictionary
 import org.godotengine.godot.plugin.SignalInfo
 import org.godotengine.godot.plugin.UsedByGodot
 
-abstract class AuthCallback {
+abstract interface AuthCallback {
    open fun onSignedIn(token: String) {}
     open fun onSignedOut() {}
 }
@@ -63,7 +63,7 @@ class GDFirebaseAuth constructor(godot: Godot): GodotPlugin(godot) {
         val facebook = params["facebook"] as Dictionary?
 
         if (!google.isNullOrEmpty()) {
-            GoogleAuth.getInstance(context).initialize(auth, google, object : AuthCallback() {
+            GoogleAuth.getInstance(context).initialize(auth, google, object : AuthCallback {
                 override fun onSignedIn(token: String) {
                     signInGoogle(token)
                 }
@@ -74,7 +74,7 @@ class GDFirebaseAuth constructor(godot: Godot): GodotPlugin(godot) {
             })
         }
         if (!facebook.isNullOrEmpty()) {
-            FacebookAuth.getInstance(context).initialize(auth, facebook, object : AuthCallback() {
+            FacebookAuth.getInstance(context).initialize(auth, facebook, object : AuthCallback {
                 override fun onSignedIn(token: String) {
                     signInFacebook(token)
                 }
@@ -128,6 +128,15 @@ class GDFirebaseAuth constructor(godot: Godot): GodotPlugin(godot) {
     @UsedByGodot
     fun signOut() {
         auth.signOut()
+    }
+
+    @UsedByGodot
+    fun isConnected(method: String): Boolean {
+        return when (method) {
+            "google" -> GoogleAuth.getInstance(context).isConnected()
+            "facebook" -> FacebookAuth.getInstance(context).isConnected()
+            else -> false
+        }
     }
 
     @UsedByGodot
@@ -203,7 +212,7 @@ class GDFirebaseAuth constructor(godot: Godot): GodotPlugin(godot) {
         userDetails["name"] = user.displayName
         userDetails["email"] = user.email
         userDetails["photo"] = user.photoUrl
-        userDetails["providers"] = user.providerId
+        userDetails["provider"] = user.providerId
         userDetails["is_anonymous"] = user.isAnonymous
         userDetails["email_verified"] = user.isEmailVerified
 

@@ -2,4 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.frogsquare.firebasemessaging">
 
+    <application>
+
+        <meta-data
+            android:name="org.godotengine.plugin.v1.GDFirebaseMessaging"
+            android:value="com.frogsquare.firebasemessaging.GDFirebaseMessaging" />
+
+    </application>
+
 </manifest>

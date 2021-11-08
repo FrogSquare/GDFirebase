@@ -14,3 +14,7 @@
 .cxx
 local.properties
 
+*.aar
+
+.idea/
+google-services.json

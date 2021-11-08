@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -284,6 +285,20 @@ class GDFirebase constructor(godot: Godot): GodotPlugin(godot) {
             )
             manager.createNotificationChannel(channel)
         }
+    }
+
+    @UsedByGodot
+    fun share(text: String, subject: String) {
+        val intent = Intent()
+        intent.action = Intent.ACTION_SEND
+        intent.putExtra(Intent.EXTRA_TEXT, text)
+
+        if (subject.isNotEmpty()) {
+            intent.putExtra(Intent.EXTRA_SUBJECT, subject)
+        }
+
+        intent.type = "text/plain"
+        activity?.startActivity(intent)
     }
 
     private fun transaction(event: String, params: Dictionary) {

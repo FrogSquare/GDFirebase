@@ -200,7 +200,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
 
     @UsedByGodot
     fun showInterstitial() {
-        val unit = mInterstitialAds.keys.firstOrNull()
+        val unit = mInterstitialAds.keys.randomOrNull()
         if (unit != null) {
             showInterstitialFor(unit)
         }
@@ -208,7 +208,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
 
     @UsedByGodot
     fun showRewarded() {
-        val unit = mRewardAds.keys.firstOrNull()
+        val unit = mRewardAds.keys.randomOrNull()
         if (unit != null) {
             showRewardedFor(unit)
         }
@@ -216,7 +216,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
 
     @UsedByGodot
     fun showRewardedInterstitial() {
-        val unit = mRewardedInterstitialAds.keys.firstOrNull()
+        val unit = mRewardedInterstitialAds.keys.randomOrNull()
         if (unit != null) {
             showRewardedInterstitialFor(unit)
         }

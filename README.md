@@ -24,7 +24,8 @@
 > Storage
 
 # Getting Started
-* Copy your `google-services.json` file to `[GAME-PROJECT]/android/build/`
+* Install Android build Template to your `GAME-PROJECT`
+* Copy `google-services.json` you downloaded from Firebase to `[GAME-PROJECT]/android/build/`
 
 # Installing
 Edit your `[GAME-PROJECT]/android/build/AndroidManifest.xml` file and add the Following inside the `<application>` tag
@@ -79,10 +80,6 @@ Now Edit your `[GAME-PROJECT]/android/build/res/values/ids.xml` file and add
             firebase = Engine.get_singleton("GDFirebase")
             firebase.initialize({dev_mode = true})
 ```
-
-RemoteConfigs default parameters `.xml` file is at `[GAME-PROJECT]/android/build/res/xml/remote_config_defaults.xml`
-
-
 ```
 fun sendCustom(name: String, params: Dictionary)
 fun sendScreenView(screenClass: String, screenName: String)
@@ -155,13 +152,22 @@ fun createNotificationChannel({
 ```
 
 #### AdMob
+
+    Banner and Interstitial Video is not implemented yet.
+
 ```
     func _ready():
         if Engine.has_singleton("GDFirebaseAdmob"):
             admob = Engine.get_singleton("GDFirebaseAdmob")
             admob.initialize({ ... })
 ```
+For testing use the official ad-units priovided by admob
 
+```
+Interstitial            ca-app-pub-3940256099942544/1033173712
+Rewarded                ca-app-pub-3940256099942544/5224354917
+Rewarded Interstitial   ca-app-pub-3940256099942544/5354046379
+```
 ```
 fun initialize({
     test = Boolean,
@@ -191,21 +197,35 @@ fun isLoadedFor(type: String, unit: String) // type: rewarded, interstitial, rew
             auth = Engine.get_singleton("GDFirebaseAuth")
             auth.initialize({ ... })
 ```
+    Authentication providers will be sepearated into there own plugins in the upcomming updates
 
 ```
 fun initialize({
     google = {},    // OPTIONAL
-    facebook = {},  // OPTIONAL
+    facebook = {permissions = ["email", "public_profile"]},  // OPTIONAL, Default
 })
 
-fun signIn(provider: String, {}) // provider: google, facebook, anonymous, email
-fun signOut()
-fun revokeAccess(provider: String)
-fun getUserInfo(): Dictionary
+// provider: google, facebook, anonymous, email
+// params: Dictionary containing email and password, for email signIn.
+fun signIn(provider: String, params: {
+    email: String,
+    password: String
+})
+
 fun createEmailAccount(email: String, password: String)
+fun revokeAccess(provider: String)
+fun signOut()
+fun isConnected(): Boolean
+
+// returns: Dictionary with (uid, name, email, photo, provider, is_anonymous, email_verified)
+fun getUserInfo(): Dictionary
+
 ```
 
 #### Remote Config
+
+RemoteConfigs default parameters `.xml` file is at `[GAME-PROJECT]/android/build/res/xml/remote_config_defaults.xml`
+
 ```
     func _ready():
         if Engine.has_singleton("GDFirebaseConfig"):
@@ -213,12 +233,20 @@ fun createEmailAccount(email: String, password: String)
             config.fetch()
 
 ```
+    Calling `fetch()` will activate the removeConfigs rightaway, [Read Mode.](https://firebase.google.com/docs/remote-config/loading)
 
 ```
+fun setDefaults(json: String)
+fun setDefaultsFile(jsonFilePath: String)
 fun setDefaultsAsync(default: Dictionary)
-fun fetch()
+fun fetch() 
 fun fetchWith({activate = Boolean})
 fun activate()
+
+// FAILURE = 1
+// NO_FETCH_YET = 0
+// SUCCESS = -1
+// THROTTLED = 2
 fun getFetchStatus(): Int
 
 fun getBoolean(key: String): Boolean
@@ -249,7 +277,6 @@ fun upload(filePath: String, child: String)
         if Engine.has_singleton("GDFirebaseCloudMessaging"):
             cm = Engine.get_singleton("GDFirebaseCloudMessaging")
 ```
-
 ```
 fun subscribe(topic: String)
 fun unsubscribe(topic: String)

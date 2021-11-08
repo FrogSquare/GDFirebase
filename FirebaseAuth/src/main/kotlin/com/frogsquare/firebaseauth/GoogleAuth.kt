@@ -16,11 +16,10 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import org.godotengine.godot.Dictionary
-import java.util.*
 
 private const val TAG: String = "GDFirebaseAuth"
 
-@Suppress("UNUSED", "UNUSED_PARAMETER")
+@Suppress("UNUSED")
 class GoogleAuth private constructor(appContext: Context) {
     private val context: Context = appContext
 
@@ -40,8 +39,14 @@ class GoogleAuth private constructor(appContext: Context) {
             callback = callbacks
 
         val webClientId = Utils.getResourceID(context, "default_web_client_id", "string")
+        val clientID =  if (webClientId <= 0 || params["clientId"] != null) {
+            params["clientId"] as String
+        } else {
+            context.getString(webClientId)
+        }
+
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN)
-            .requestIdToken(context.getString(webClientId))
+            .requestIdToken(clientID)
             .requestEmail()
             .build()
 
@@ -70,14 +75,25 @@ class GoogleAuth private constructor(appContext: Context) {
     }
 
     fun revokeAccess() {
+        if (!this::client.isInitialized) return
 
+        client.revokeAccess().addOnCompleteListener {
+            if (it.isSuccessful) {
+                Log.d(TAG, "Google Access Revoked")
+            }
+        }
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_GOOGLE_ID) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            handleSignInResult(task)
+            if (resultCode == Activity.RESULT_OK) {
+                handleSignInResult(task)
+            } else {
+                val e = task.exception
+                Log.d(TAG, "Google SignIn failed: $e\n" + Log.getStackTraceString(e))
+            }
         }
     }
 

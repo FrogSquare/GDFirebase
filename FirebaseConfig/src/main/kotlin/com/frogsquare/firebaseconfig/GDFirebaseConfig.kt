@@ -3,6 +3,7 @@ package com.frogsquare.firebaseconfig
 import android.content.Context
 import android.util.Log
 import com.frogsquare.firebase.GDFirebase
+import com.frogsquare.firebase.Utils
 
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -42,6 +43,23 @@ class GDFirebaseConfig constructor(godot: Godot) : GodotPlugin(godot) {
                 remoteConfig.setDefaultsAsync(resourceID)
             }
         }
+    }
+
+    @UsedByGodot
+    fun setDefaultsFile(filePath: String) {
+        Log.d(TAG, "Loading Defaults from file:$filePath")
+
+        var data: String = Utils.readFromFile(context!!, filePath)
+        data = data.replace("\\s+".toRegex(), "")
+        setDefaults(data)
+    }
+
+    @UsedByGodot
+    private fun setDefaults(defaults: String) {
+        val defaultsMap = Utils.jsonToDictionary(defaults)
+        Log.d(TAG, "RemoteConfig: Setting Default values, $defaultsMap")
+
+        setDefaultsAsync(defaultsMap)
     }
 
     @UsedByGodot

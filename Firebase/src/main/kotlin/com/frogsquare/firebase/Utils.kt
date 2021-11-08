@@ -5,31 +5,26 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.util.Log
 import android.graphics.BitmapFactory
-
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
-import org.godotengine.godot.Dictionary
-import java.io.File
 
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
+import org.godotengine.godot.Dictionary
+import org.json.JSONException
+import org.json.JSONObject
+
+import java.lang.StringBuilder
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.*
-
+import java.io.*
 
 private const val INTENT_REQUEST_ID = 6001
 
 @Suppress("UNUSED")
 object Utils {
-    @Suppress("PRIVATE")
     const val SHARED_PREFERENCE_NAME: String = "GDFirebase.sharedPreferences"
     const val DEFAULT_CHANNEL_ID: String = "default"
 
@@ -80,6 +75,7 @@ object Utils {
         )
     }
 
+    @JvmStatic
     fun getBitmapFromAsset(context: Context, fPath: String): Bitmap? {
         val filePath = if (fPath.startsWith("res://")) {
             fPath.replaceFirst("res://", "")
@@ -102,6 +98,7 @@ object Utils {
         return bitmap
     }
 
+    @JvmStatic
     fun doInBackground(imageUrl: String): Bitmap? {
         val inputStream: InputStream
         try {
@@ -151,6 +148,7 @@ object Utils {
         prefsEditor.apply()
     }
 
+    @JvmStatic
     fun createDefaultChannel(manager: NotificationManager) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -161,5 +159,62 @@ object Utils {
 
             manager.createNotificationChannel(channel)
         }
+    }
+
+    @JvmStatic
+    fun jsonToDictionary(jsonString: String): Dictionary {
+        val ret = Dictionary()
+        try {
+            val json = JSONObject(jsonString)
+            val iterator = json.keys().iterator()
+
+            while (iterator.hasNext()) {
+                val key = iterator.next()
+                val value = json.get(key)
+
+                ret[key] = value
+            }
+        } catch (e: JSONException) {
+            Log.d("GDFirebase", "JSONException ${e.message}/n"+Log.getStackTraceString(e))
+        }
+        return ret
+    }
+
+    @JvmStatic
+    fun readFromFile(context: Context, path: String): String {
+        var filepath = path
+        if (filepath.startsWith("res://")) {
+            filepath = filepath.replaceFirst("res://", "")
+        }
+
+        val ret = StringBuilder()
+        var fIn: InputStream? = null
+        var isr : InputStreamReader? = null
+        var input : BufferedReader? = null
+
+        try {
+            fIn = context.resources.assets.open(filepath, Context.MODE_PRIVATE)
+            isr = InputStreamReader(fIn)
+            input = BufferedReader(isr)
+
+            var line: String? = input.readLine()
+
+            while (!line.isNullOrEmpty()) {
+                ret.append(line)
+                line = input.readLine()
+            }
+        } catch (e: Exception) {
+            Log.d("GDFirebase", "FileRead Error ${e.message}/n"+Log.getStackTraceString(e))
+        } finally {
+            try {
+                fIn?.close()
+                isr?.close()
+                input?.close()
+            } catch (e2: Exception) {
+                Log.d("GDFirebase", "${e2.message}\n" + Log.getStackTraceString(e2))
+            }
+        }
+
+        return ret.toString()
     }
 }

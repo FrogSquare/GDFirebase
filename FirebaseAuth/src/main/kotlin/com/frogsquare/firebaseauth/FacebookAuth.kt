@@ -3,23 +3,18 @@ package com.frogsquare.firebaseauth
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.util.Log
 
 import org.godotengine.godot.Dictionary
 
+import com.google.firebase.auth.FirebaseAuth
+
 import com.facebook.*
-import com.facebook.internal.Utility
-import com.facebook.login.LoginConfiguration
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
+
 import com.frogsquare.firebase.GDFirebase
-
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FacebookAuthProvider
-import com.google.firebase.auth.FirebaseUser
-
 import com.frogsquare.firebase.SingletonHolder
 
 private const val TAG: String = "GDFirebaseAuth"
@@ -38,7 +33,10 @@ class FacebookAuth private constructor(appContext: Context) {
 
     private var profile: Profile? = null
     private var accessToken: AccessToken? = null
+    private var permissions = listOf("email", "public_profile")
+    private var permissionsGranted = arrayListOf<String>()
 
+    @Suppress("UNCHECKED_CAST")
     fun initialize(auth: FirebaseAuth, params: Dictionary, callbacks: AuthCallback?) {
         if (GDFirebase.isDevelopment) {
             Log.i(TAG, "Initializing google")
@@ -49,6 +47,11 @@ class FacebookAuth private constructor(appContext: Context) {
             this.callback = callbacks
 
         this.callbackManager = CallbackManager.Factory.create()
+
+        val permissions = params["permissions"] as List<String>?
+        permissions?.let {
+            this.permissions = it
+        }
 
         LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
             override fun onSuccess(result: LoginResult) {
@@ -96,19 +99,23 @@ class FacebookAuth private constructor(appContext: Context) {
         this.activity = activity
     }
 
-    fun isPermissionGranted() {
-
+    fun isConnected(): Boolean {
+        return profile != null
     }
 
-    fun getPermission() {
+    fun isPermissionGranted(permission: String): Boolean {
+        val accessToken = AccessToken.getCurrentAccessToken()
 
+        if(accessToken?.isExpired == true) {
+            return false
+        }
+
+        return permissionsGranted.contains(permission)
     }
-
-    fun askForPermission() {}
 
     fun signIn(activity: Activity) {
         if (!this::callbackManager.isInitialized) { return }
-        requireReadPermissions(listOf("email", "public_profile"))
+        requireReadPermissions(this.permissions)
     }
 
     fun signOut() {
@@ -133,26 +140,25 @@ class FacebookAuth private constructor(appContext: Context) {
         graph.executeAsync()
     }
 
-    fun getPermissions() {
-        val url = "me/permissions"
-
-        val graph = GraphRequest(
+    private fun getPermissions() {
+        GraphRequest(
             AccessToken.getCurrentAccessToken(),
-            url,
+            "me/permissions",
             null,
             HttpMethod.GET,
-            GraphRequest.Callback {
+            {
                 val data = it.getJSONObject()?.optJSONArray("data")
                 data?.let {
+                    permissionsGranted.clear()
+
                     for (i: Int in 0 until data.length()) {
                         val dd = data.optJSONObject(i)
 
                         if (dd.optString("status").equals("granted")) {
-                            Log.d(TAG, "Permission $dd")
+                            permissionsGranted.add(dd.optString("permission"))
                         }
                     }
                 }
-
             }).executeAsync()
     }
 
@@ -179,6 +185,7 @@ class FacebookAuth private constructor(appContext: Context) {
     fun onSignOutComplete() {
         Log.d(TAG, "Facebook::SignOut::Complete")
         callback.onSignedOut()
+        profile = null
     }
 
     fun askForPermission(title: String, message: String, permission: String, read: Boolean) {
