@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import com.frogsquare.firebase.Common
 import com.frogsquare.firebase.GDFirebase
 import com.frogsquare.firebase.Utils
 import com.google.android.gms.tasks.OnCompleteListener
@@ -18,13 +19,10 @@ import org.godotengine.godot.Dictionary
 import org.godotengine.godot.plugin.SignalInfo
 import org.godotengine.godot.plugin.UsedByGodot
 
-abstract interface AuthCallback {
-   open fun onSignedIn(token: String) {}
-    open fun onSignedOut() {}
+interface AuthCallback {
+    fun onSignedIn(token: String) {}
+    fun onSignedOut() {}
 }
-
-const val RC_GOOGLE_ID = 0x0004
-const val RC_FACEBOOK_ID = 0x0005
 
 private const val TAG: String = "GDFirebaseAuth"
 
@@ -56,7 +54,7 @@ class GDFirebaseAuth constructor(godot: Godot): GodotPlugin(godot) {
 
     @UsedByGodot
     fun initialize(params: Dictionary) {
-        Log.i(TAG, "Initializing! ${params}")
+        Log.i(TAG, "Initializing! $params")
         isInDevMode = GDFirebase.isDevelopment
 
         val google = params["google"] as Dictionary?
@@ -280,12 +278,12 @@ class GDFirebaseAuth constructor(godot: Godot): GodotPlugin(godot) {
     }
 
     override fun onMainActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == RC_FACEBOOK_ID) {
+        if (requestCode == Common.RC_FACEBOOK) {
             FacebookAuth.getInstance(context).onActivityResult(requestCode, resultCode,data)
             return
         }
 
-        if (requestCode == RC_GOOGLE_ID) {
+        if (requestCode == Common.RC_GOOGLE) {
             GoogleAuth.getInstance(context).onActivityResult(requestCode, resultCode,data)
             return
         }

@@ -22,8 +22,10 @@ import com.google.firebase.analytics.FirebaseAnalytics.Event.*
 import com.google.firebase.analytics.FirebaseAnalytics.Param.*
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.installations.ktx.installations
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.app
+import org.godotengine.godot.plugin.SignalInfo
 import java.util.concurrent.TimeUnit
 
 private const val TAG: String = "GDFirebase"
@@ -49,7 +51,7 @@ class GDFirebase constructor(godot: Godot): GodotPlugin(godot) {
 
     init {
         preferences = myContext.getSharedPreferences(
-            Utils.SHARED_PREFERENCE_NAME,
+            Common.SHARED_PREFERENCE_NAME,
             Context.MODE_PRIVATE
         )
 
@@ -288,6 +290,13 @@ class GDFirebase constructor(godot: Godot): GodotPlugin(godot) {
     }
 
     @UsedByGodot
+    fun requestInstallationId() {
+        Firebase.installations.id.addOnSuccessListener { id ->
+            emitSignal("installation_id", id)
+        }
+    }
+
+    @UsedByGodot
     fun share(text: String, subject: String) {
         val intent = Intent()
         intent.action = Intent.ACTION_SEND
@@ -298,7 +307,10 @@ class GDFirebase constructor(godot: Godot): GodotPlugin(godot) {
         }
 
         intent.type = "text/plain"
-        activity?.startActivity(intent)
+
+        runOnUiThread {
+            activity?.startActivity(intent)
+        }
     }
 
     private fun transaction(event: String, params: Dictionary) {
@@ -335,6 +347,12 @@ class GDFirebase constructor(godot: Godot): GodotPlugin(godot) {
             if (transactionId != null) param(TRANSACTION_ID, transactionId)
             if (value != null) param(VALUE, value.toDouble())
         }
+    }
+
+    override fun getPluginSignals(): MutableSet<SignalInfo> {
+        return mutableSetOf(
+            SignalInfo("installation_id", String::class.javaObjectType)
+        )
     }
 
     override fun getPluginName(): String {

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.frogsquare.firebase.Common
 import com.frogsquare.firebase.GDFirebase
 import com.frogsquare.firebase.SingletonHolder
 import com.frogsquare.firebase.Utils
@@ -66,7 +67,7 @@ class GoogleAuth private constructor(appContext: Context) {
 
     fun signIn(activity: Activity) {
         val intent = client.signInIntent
-        activity.startActivityForResult(intent, RC_GOOGLE_ID)
+        activity.startActivityForResult(intent, Common.RC_GOOGLE)
     }
 
     fun signOut() {
@@ -86,7 +87,7 @@ class GoogleAuth private constructor(appContext: Context) {
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == RC_GOOGLE_ID) {
+        if (requestCode == Common.RC_GOOGLE) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             if (resultCode == Activity.RESULT_OK) {
                 handleSignInResult(task)

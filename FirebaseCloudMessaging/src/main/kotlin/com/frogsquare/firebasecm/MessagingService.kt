@@ -2,6 +2,7 @@ package com.frogsquare.firebasecm
 
 import android.content.Context
 import android.util.Log
+import com.frogsquare.firebase.Common
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -12,7 +13,6 @@ import org.json.JSONException
 import org.json.JSONObject
 
 private const val TAG: String = "GDFirebaseCM"
-private const val PREFERENCE_STORAGE: String = "GDFirebaseCM.sharedPreferences"
 
 class MessagingService: FirebaseMessagingService() {
 
@@ -20,7 +20,7 @@ class MessagingService: FirebaseMessagingService() {
         Log.d(TAG, "Message, From: ${message.data} ${message.from}")
 
         if (message.data.isNotEmpty()) {
-            val prefs = getSharedPreferences(PREFERENCE_STORAGE, Context.MODE_PRIVATE)
+            val prefs = getSharedPreferences(Common.SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
             val shouldSave = prefs.getBoolean("should_save", true)
 
             if (shouldSave) {

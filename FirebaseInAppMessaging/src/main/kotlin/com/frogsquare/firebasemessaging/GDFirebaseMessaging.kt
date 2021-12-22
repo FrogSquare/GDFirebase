@@ -1,11 +1,9 @@
 package com.frogsquare.firebasemessaging
 
 import android.content.Context
-import com.google.android.gms.tasks.Task
+import com.frogsquare.firebase.Common
+import com.frogsquare.firebase.Utils
 import com.google.firebase.inappmessaging.FirebaseInAppMessaging
-import com.google.firebase.inappmessaging.FirebaseInAppMessagingContextualTrigger
-import com.google.firebase.inappmessaging.FirebaseInAppMessagingDisplay
-import com.google.firebase.inappmessaging.FirebaseInAppMessagingDisplayCallbacks
 import org.godotengine.godot.Dictionary
 import org.godotengine.godot.Godot
 import org.godotengine.godot.plugin.GodotPlugin
@@ -16,14 +14,22 @@ import org.godotengine.godot.plugin.UsedByGodot
 class GDFirebaseMessaging constructor(godot: Godot): GodotPlugin(godot) {
 
     private val context: Context = godot.requireContext()
-
     private val messaging = FirebaseInAppMessaging.getInstance()
 
     init {
-        messaging.addClickListener {
-            message, action ->
-                val url = action.actionUrl
-                val meta = message.campaignMetadata
+        messaging.addClickListener { message, action ->
+            val campaignId = message.campaignMetadata?.campaignId ?: ""
+            emitSignal("action", action.actionUrl, campaignId, message.data)
+        }
+    }
+
+    @UsedByGodot
+    fun initialize(params: Dictionary) {
+        if (params.containsKey("auto_data_connection")) {
+            autoDataConnection(params["auto_data_connection"] as Boolean)
+        }
+        if (params.containsKey("messages_suppressed")) {
+            suppressed(params["messages_suppressed"] as Boolean)
         }
     }
 
@@ -39,31 +45,44 @@ class GDFirebaseMessaging constructor(godot: Godot): GodotPlugin(godot) {
 
     @UsedByGodot
     fun trigger(trigger: String) {
-        messaging.triggerEvent(trigger)
+        runOnUiThread {
+            messaging.triggerEvent(trigger)
+        }
     }
+
+    /*
+     * maxImageHeightWeight : Float?
+     * maxImageWidthWeight  : Float?
+     * maxBodyHeightWeight  : Float?
+     * maxBodyWidthWeight   : Float?
+     * maxDialogHeightPx    : Int?
+     * maxDialogWidthPx     : Int?
+     * windowFlag           : Int?
+     * viewWindowGravity    : Int?
+     * windowWidth          : Int?
+     * windowHeight         : Int?
+     * backgroundEnabled    : Boolean?
+     * animate              : Boolean?
+     * autoDismiss          : Boolean?
+     */
 
     @UsedByGodot
     fun configure(params: Dictionary) {
-        val maxImageHeightWeight = params["maxImageHeightWeight"] as Float?
-        val maxImageWidthWeight = params["maxImageWidthWeight"] as Float?
-        val maxBodyHeightWeight = params["maxBodyHeightWeight"] as Float?
-        val maxBodyWidthWeight = params["maxBodyWidthWeight"] as Float?
-
-        val maxDialogHeightPx = params["maxDialogHeightPx"] as Int?
-        val maxDialogWidthPx = params["maxDialogWidthPx"] as Int?
-        val windowFlag = params["windowFlag"] as Int?
-        val viewWindowGravity = params["viewWindowGravity"] as Int?
-        val windowWidth = params["windowWidth"] as Int?
-        val windowHeight = params["windowHeight"] as Int?
-
-        val backgroundEnabled = params["backgroundEnabled"] as Boolean?
-        val animate = params["animate"] as Boolean?
-        val autoDismiss = params["autoDismiss"] as Boolean?
+        val json = Utils.dictionaryToJson(params)
+        val prefs = context.getSharedPreferences(Common.SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString("in_app_messaging_display_config", json.toString()).apply()
     }
 
     override fun getPluginSignals(): MutableSet<SignalInfo> {
         return mutableSetOf(
-            SignalInfo("message_received", Dictionary::class.javaObjectType)
+            SignalInfo("message_received", Dictionary::class.javaObjectType),
+            SignalInfo("installation_id", String::class.javaObjectType),
+            SignalInfo(
+                "action",
+                String::class.javaObjectType,
+                String::class.javaObjectType,
+                Dictionary::class.javaObjectType
+            )
         )
     }
 

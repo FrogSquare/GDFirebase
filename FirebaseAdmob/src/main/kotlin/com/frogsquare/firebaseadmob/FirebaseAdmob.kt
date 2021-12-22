@@ -34,6 +34,9 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
     private var mRewardAds: HashMap<String, RewardedAd> = hashMapOf()
     private var mRewardedInterstitialAds: HashMap<String, RewardedInterstitialAd> = hashMapOf()
 
+    private var autoReload: Boolean = true
+    private var adUnits: Map<String, Array<String>?> = mapOf()
+
     init {
         MobileAds.initialize(myContext!!) {
             mInitializationComplete = true
@@ -48,13 +51,20 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
     @UsedByGodot
     @Suppress( "UNCHECKED_CAST")
     fun initialize(params: Dictionary) {
+        autoReload = params["auto_reload"] as Boolean? ?: true
+
         //val bannerAdUnits = params["bannerUnits"] as String?
         //var bannerPosition = params["bannerPosition"] as String? ?: "BOTTOM"
-
         val initTestAds = params["test"]
         val interstitialAdUnits = params["interstitialUnits"] as Array<String>?
         val rewardAdUnits = params["rewardUnits"] as Array<String>?
         val rewardedInterstitialAdUnits = params["rewardedInterstitialUnits"] as Array<String>?
+
+        adUnits = mapOf(
+            "interstitial" to interstitialAdUnits,
+            "rewarded" to rewardAdUnits,
+            "rewarded_interstitial" to rewardedInterstitialAdUnits
+        )
 
         runOnUiThread {
             if (interstitialAdUnits.isNullOrEmpty()) {
@@ -90,8 +100,11 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
     }
 
     private fun createInterstitial(unit: String) {
-        val adRequest = AdRequest.Builder().build()
+        if (mInterstitialAds.contains(unit)) {
+            mInterstitialAds.remove(unit)
+        }
 
+        val adRequest = AdRequest.Builder().build()
         InterstitialAd.load(
             myContext!!,
             unit,
@@ -108,21 +121,40 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
                 override fun onAdLoaded(interstitialAd: InterstitialAd) {
                     Log.d(TAG, "Ad was loaded.")
                     interstitialAd.fullScreenContentCallback = object: FullScreenContentCallback() {
-                        override fun onAdDismissedFullScreenContent() {
-                            Log.d(TAG, "Ad was dismissed.")
-                        }
-
                         override fun onAdFailedToShowFullScreenContent(adError: AdError?) {
                             Log.d(TAG, "Ad failed to show.")
+                            emitSignal(
+                                "failed",
+                                "interstitial",
+                                interstitialAd.adUnitId
+                            )
+                        }
+
+                        override fun onAdDismissedFullScreenContent() {
+                            Log.d(TAG, "Ad was dismissed.")
+                            emitSignal(
+                                "dismissed",
+                                "interstitial",
+                                interstitialAd.adUnitId
+                            )
                         }
 
                         override fun onAdShowedFullScreenContent() {
                             Log.d(TAG, "Ad showed fullscreen content.")
-                            mInterstitialAds.remove(unit)
+                            emitSignal(
+                                "showed",
+                                "interstitial",
+                                interstitialAd.adUnitId
+                            )
+                            if (autoReload) createInterstitial(unit)
                         }
                     }
 
-                    emitSignal("ad_loaded", "interstitial", interstitialAd.adUnitId)
+                    emitSignal(
+                        "loaded",
+                        "interstitial",
+                        interstitialAd.adUnitId
+                    )
                     mInterstitialAds[unit] = interstitialAd
                 }
             }
@@ -130,11 +162,14 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
     }
 
     private fun createRewarded(unit: String) {
+        if (mRewardAds.contains(unit)) {
+            mRewardAds.remove(unit)
+        }
+
         val adRequest = AdRequest.Builder().build()
         RewardedAd.load(myContext!!, unit, adRequest, object : RewardedAdLoadCallback() {
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 Log.d(TAG, "Ad Failed to Load")
-
                 if (mRewardAds.contains(unit)) {
                     mRewardAds.remove(unit)
                 }
@@ -144,24 +179,44 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
                 Log.d(TAG, "Ad Loaded.")
 
                 rewardedAd.fullScreenContentCallback = object : FullScreenContentCallback() {
-                    override fun onAdShowedFullScreenContent() {
-                        Log.d(TAG, "Ad Was Shown.")
-                    }
-
                     override fun onAdFailedToShowFullScreenContent(p0: AdError) {
                         Log.d(TAG, "Ad Failed to Shown.")
+                        emitSignal(
+                            "failed",
+                            "rewarded",
+                            rewardedAd.adUnitId
+                        )
                     }
 
                     override fun onAdDismissedFullScreenContent() {
                         Log.d(TAG, "Ad Dismissed.")
+                        emitSignal(
+                            "dismissed",
+                            "rewarded",
+                            rewardedAd.adUnitId
+                        )
+                    }
+                    override fun onAdShowedFullScreenContent() {
+                        Log.d(TAG, "Ad Was Shown.")
+                        emitSignal(
+                            "showed",
+                            "rewarded",
+                            rewardedAd.adUnitId
+                        )
+                        if (autoReload) createRewarded(unit)
                     }
                 }
+                emitSignal("loaded", "rewarded", rewardedAd.adUnitId)
                 mRewardAds[unit] = rewardedAd
             }
         })
     }
 
     private fun createRewardedInterstitial(unit: String) {
+        if (mRewardedInterstitialAds.contains(unit)) {
+            mRewardedInterstitialAds.remove(unit)
+        }
+
         val adRequest = AdRequest.Builder().build()
         RewardedInterstitialAd.load(
             myContext!!,
@@ -172,19 +227,40 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
                 Log.d(TAG, "Ad Loaded.")
 
                 rewardedInterstitialAd.fullScreenContentCallback = object : FullScreenContentCallback() {
-                    override fun onAdShowedFullScreenContent() {
-                        Log.d(TAG, "Ad Was Shown.")
-                    }
-
                     override fun onAdFailedToShowFullScreenContent(p0: AdError) {
                         Log.d(TAG, "Ad Failed to Shown.")
+                        emitSignal(
+                            "failed",
+                            "rewarded_interstitial",
+                            rewardedInterstitialAd.adUnitId
+                        )
                     }
 
                     override fun onAdDismissedFullScreenContent() {
                         Log.d(TAG, "Ad Dismissed.")
+                        emitSignal(
+                            "dismissed",
+                            "rewarded_interstitial",
+                            rewardedInterstitialAd.adUnitId
+                        )
+                    }
+
+                    override fun onAdShowedFullScreenContent() {
+                        Log.d(TAG, "Ad Was Shown.")
+                        emitSignal(
+                            "showed",
+                            "rewarded_interstitial",
+                            rewardedInterstitialAd.adUnitId
+                        )
+                        if (autoReload) createRewardedInterstitial(unit)
                     }
                 }
 
+                emitSignal(
+                    "loaded",
+                    "rewarded_interstitial",
+                    rewardedInterstitialAd.adUnitId
+                )
                 mRewardedInterstitialAds[unit] = rewardedInterstitialAd
             }
 
@@ -196,6 +272,33 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
                 }
             }
         })
+    }
+
+    @UsedByGodot
+    fun reloadAll() {
+        reloadFor("interstitial")
+        reloadFor("rewarded")
+        reloadFor("rewarded_interstitial")
+    }
+
+    @UsedByGodot
+    fun reloadFor(type: String) {
+        val units = adUnits[type]
+
+        if (units == null) {
+            Log.d(TAG, "Ad Units for $type not available")
+            return
+        }
+
+        runOnUiThread {
+            units.forEach { unit ->
+                when (type) {
+                    "interstitial" -> createInterstitial(unit)
+                    "rewarded" -> createRewarded(unit)
+                    "rewarded_interstitial" -> createRewardedInterstitial(unit)
+                }
+            }
+        }
     }
 
     @UsedByGodot
@@ -247,6 +350,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
                     dict["amount"] = it.amount
 
                     emitSignal("rewarded", dict)
+                    createRewarded(unit)
                 }
             }
         }
@@ -264,6 +368,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
                     dict["amount"] = it.amount
 
                     emitSignal("rewarded", dict)
+                    createRewardedInterstitial(unit)
                 }
             }
         }
@@ -291,7 +396,10 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
 
     override fun getPluginSignals(): MutableSet<SignalInfo> {
         return mutableSetOf(
-            SignalInfo("ad_loaded", String::class.javaObjectType, String::class.javaObjectType),
+            SignalInfo("failed", String::class.javaObjectType, String::class.javaObjectType),
+            SignalInfo("showed", String::class.javaObjectType, String::class.javaObjectType),
+            SignalInfo("dismissed", String::class.javaObjectType, String::class.javaObjectType),
+            SignalInfo("loaded", String::class.javaObjectType, String::class.javaObjectType),
             SignalInfo("rewarded", Dictionary::class.javaObjectType)
         )
     }

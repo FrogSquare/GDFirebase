@@ -9,10 +9,8 @@ import android.content.Intent
 import android.util.Log
 
 import androidx.core.app.NotificationCompat
+import com.frogsquare.firebase.Common
 import com.frogsquare.firebase.Utils
-
-const val PROGRESS_NOTIFICATION_ID = 0x0006
-const val COMPLETE_NOTIFICATION_ID = 0x0007
 
 @Suppress("UNUSED")
 abstract class BaseTaskService: Service() {
@@ -49,7 +47,7 @@ abstract class BaseTaskService: Service() {
         val labelId = Utils.getResourceID(this, "godot_project_name_string", "string")
 
         Utils.createDefaultChannel(manager)
-        val builder = NotificationCompat.Builder(this, Utils.DEFAULT_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, Common.DEFAULT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
             .setContentTitle(getString(labelId))
             .setContentText(caption)
@@ -57,7 +55,7 @@ abstract class BaseTaskService: Service() {
             .setOngoing(true)
             .setAutoCancel(false)
 
-        manager.notify(PROGRESS_NOTIFICATION_ID, builder.build())
+        manager.notify(Common.PROGRESS_NOTIFICATION_ID, builder.build())
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
@@ -72,17 +70,17 @@ abstract class BaseTaskService: Service() {
         val labelId = Utils.getResourceID(this, "godot_project_name_string", "string")
 
         Utils.createDefaultChannel(manager)
-        val builder = NotificationCompat.Builder(this, Utils.DEFAULT_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, Common.DEFAULT_CHANNEL_ID)
             .setSmallIcon(icon)
             .setContentTitle(getString(labelId))
             .setContentText(caption)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
-        manager.notify(COMPLETE_NOTIFICATION_ID, builder.build())
+        manager.notify(Common.COMPLETE_NOTIFICATION_ID, builder.build())
     }
 
     protected fun dismissProgressNotification() {
-        manager.cancel(PROGRESS_NOTIFICATION_ID)
+        manager.cancel(Common.PROGRESS_NOTIFICATION_ID)
     }
 }

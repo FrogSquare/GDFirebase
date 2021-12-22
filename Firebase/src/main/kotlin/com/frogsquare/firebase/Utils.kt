@@ -21,13 +21,9 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.io.*
 
-private const val INTENT_REQUEST_ID = 6001
 
 @Suppress("UNUSED")
 object Utils {
-    const val SHARED_PREFERENCE_NAME: String = "GDFirebase.sharedPreferences"
-    const val DEFAULT_CHANNEL_ID: String = "default"
-
     @JvmStatic
     fun getXmlID(context: Context, name: String): Int {
         return getResourceID(context, name, "xml")
@@ -69,7 +65,7 @@ object Utils {
 
         return PendingIntent.getActivity(
             context,
-            INTENT_REQUEST_ID,
+            Common.INTENT_REQUEST_ID,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -120,7 +116,10 @@ object Utils {
 
     @JvmStatic
     fun loadPreferences(context: Context, params: Dictionary) {
-        val prefs = context.getSharedPreferences(SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(
+            Common.SHARED_PREFERENCE_NAME,
+            Context.MODE_PRIVATE
+        )
         val prefsEditor = prefs.edit()
 
         for (pair in params) {
@@ -152,7 +151,7 @@ object Utils {
     fun createDefaultChannel(manager: NotificationManager) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                DEFAULT_CHANNEL_ID,
+                Common.DEFAULT_CHANNEL_ID,
                 "Default",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
@@ -178,6 +177,21 @@ object Utils {
             Log.d("GDFirebase", "JSONException ${e.message}/n"+Log.getStackTraceString(e))
         }
         return ret
+    }
+
+    @JvmStatic
+    fun dictionaryToJson(data: Dictionary): JSONObject {
+        val json = JSONObject()
+
+        try {
+            for (pair in data) {
+                json.put(pair.key, pair.value)
+            }
+        } catch (e: JSONException) {
+            Log.e("GDFirebase", "JSON Exception ${e.message}\n"+Log.getStackTraceString(e))
+        }
+
+        return json
     }
 
     @JvmStatic

@@ -28,6 +28,18 @@
 * Copy `google-services.json` you downloaded from Firebase to `[GAME-PROJECT]/android/build/`
 
 # Installing
+Add `google-services` plugin to your `[GAME-PROJECT]/android/build/build.gradle` file
+```
+    dependencies {
+        classpath 'com.google.gms:google-services:4.3.10'
+        // ...
+    }
+```
+Now Apply the Google Services Plugin in your `build.gradle` file, like: 
+```
+apply plugin: 'com.google.gms.google-services'
+```
+
 Edit your `[GAME-PROJECT]/android/build/AndroidManifest.xml` file and add the Following inside the `<application>` tag
 
 > If you are using `AdMob`
@@ -181,13 +193,22 @@ fun showInterstitial()
 fun showRewarded()
 fun showRewardedInterstitial()
 
-fun showInterstitial(unit: String)
-fun showRewarded(unit: String)
-fun showRewardedInterstitial(unit: String)
+fun showInterstitialFor(unit: String)
+fun showRewardedFor(unit: String)
+fun showRewardedInterstitialFor(unit: String)
+
+fun reloadAll()
+fun reloadFor(type: String)
 
 // Get if any ad-unit is Loaded
 fun isLoaded(type: String) // type: rewarded, interstitial, rewarded_interstitial
 fun isLoadedFor(type: String, unit: String) // type: rewarded, interstitial, rewarded_interstitial
+
+// Signals
+"loaded" -> loaded(type: Sting, unit: String)
+"failed" -> failed(type: Sting, unit: String)
+"showed" -> showed(type: Sting, unit: String)
+"dismissed" -> dismissed(type: Sting, unit: String)
 ```
 
 #### Authentication

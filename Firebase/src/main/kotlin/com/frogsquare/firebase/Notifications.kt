@@ -14,7 +14,6 @@ import androidx.core.app.NotificationCompat
 import org.godotengine.godot.Dictionary
 
 private const val TAG: String = "GDFirebase"
-private const val NOTIFICATION_REQUEST_ID = 8001
 
 object Notifications {
     @JvmStatic
@@ -29,7 +28,7 @@ object Notifications {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
-                channelId ?: Utils.DEFAULT_CHANNEL_ID,
+                channelId ?: Common.DEFAULT_CHANNEL_ID,
                 "${channelId ?: "Base"} Notifications",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
@@ -41,7 +40,7 @@ object Notifications {
         val notificationIconId = Utils.getMipmapID(context, "notification_icon")
         val icon = BitmapFactory.decodeResource(context.resources, iconId)
 
-        val builder = NotificationCompat.Builder(context, channelId ?: Utils.DEFAULT_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, channelId ?: Common.DEFAULT_CHANNEL_ID)
             .setDefaults(Notification.DEFAULT_ALL)
             .setSmallIcon(if (notificationIconId <= 0) iconId else notificationIconId)
             .setLargeIcon(icon)
@@ -84,7 +83,7 @@ object Notifications {
             builder.color = it as Int
         }
 
-        manager.notify(NOTIFICATION_REQUEST_ID, builder.build())
+        manager.notify(Common.NOTIFICATION_REQUEST_ID, builder.build())
     }
 
     @JvmStatic
