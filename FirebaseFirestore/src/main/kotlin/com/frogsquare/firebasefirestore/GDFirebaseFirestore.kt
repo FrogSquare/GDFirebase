@@ -7,6 +7,7 @@ import com.google.firebase.firestore.SetOptions
 import org.godotengine.godot.Dictionary
 import org.godotengine.godot.Godot
 import org.godotengine.godot.plugin.GodotPlugin
+import org.godotengine.godot.plugin.SignalInfo
 import org.godotengine.godot.plugin.UsedByGodot
 
 import org.json.JSONException
@@ -28,20 +29,12 @@ class GDFirebaseFirestore constructor(godot: Godot): GodotPlugin(godot) {
         storage.collection(name).get()
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-                    val json = JSONObject()
-
-                    try {
-                        val child = JSONObject()
-                        for (doc in it.result) {
-                            child.put(doc.id, doc.data)
-                        }
-
-                        json.put(name, child)
-                    } catch (e: JSONException) {
-                        Log.d(TAG, "JSON Exception ${e.message}")
+                    val child = Dictionary()
+                    for (doc in it.result) {
+                        child[doc.id] = doc.data
                     }
 
-                    emitSignal("document_loaded", json.toString())
+                    emitSignal("document_loaded", child)
                 } else {
                     Log.d(TAG, "Error::Getting::Documents::${it.exception}")
                 }
@@ -67,6 +60,14 @@ class GDFirebaseFirestore constructor(godot: Godot): GodotPlugin(godot) {
             }.addOnFailureListener {
                 Log.d(TAG, "Error::Setting::Document::${it.message}")
             }
+    }
+
+    override fun getPluginSignals(): MutableSet<SignalInfo> {
+        return mutableSetOf(
+            SignalInfo("document_set", Boolean::class.javaObjectType),
+            SignalInfo("document_added", Boolean::class.javaObjectType),
+            SignalInfo("document_loaded", Dictionary::class.javaObjectType),
+        )
     }
 
     override fun getPluginName(): String {

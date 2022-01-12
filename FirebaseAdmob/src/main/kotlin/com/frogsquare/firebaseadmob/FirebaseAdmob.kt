@@ -67,32 +67,19 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
         )
 
         runOnUiThread {
-            if (interstitialAdUnits.isNullOrEmpty()) {
-                if (initTestAds != null) {
-                    createInterstitial(INTERSTITIAL_ID)
-                }
+            if (initTestAds == true) {
+                Log.d(TAG, "Loading Test AdUnits")
+                createInterstitial(INTERSTITIAL_ID)
+                createRewarded(REWARDED_ID)
+                createRewardedInterstitial(REWARDED_INTERSTITIAL_ID)
             } else {
-                for (unit in interstitialAdUnits) {
+                interstitialAdUnits?.forEach { unit ->
                     createInterstitial(unit)
                 }
-            }
-
-            if (rewardAdUnits.isNullOrEmpty()) {
-                if (initTestAds != null) {
-                    createRewarded(REWARDED_ID)
-                }
-            } else {
-                for (unit in rewardAdUnits) {
+                rewardAdUnits?.forEach { unit ->
                     createRewarded(unit)
                 }
-            }
-
-            if (rewardedInterstitialAdUnits.isNullOrEmpty()) {
-                if (initTestAds != null) {
-                    createRewardedInterstitial(REWARDED_INTERSTITIAL_ID)
-                }
-            } else {
-                for (unit in rewardedInterstitialAdUnits) {
+                rewardedInterstitialAdUnits?.forEach { unit ->
                     createRewardedInterstitial(unit)
                 }
             }
@@ -104,6 +91,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
             mInterstitialAds.remove(unit)
         }
 
+        Log.d(TAG, "Loading Interstitial $unit")
         val adRequest = AdRequest.Builder().build()
         InterstitialAd.load(
             myContext!!,
@@ -166,6 +154,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
             mRewardAds.remove(unit)
         }
 
+        Log.d(TAG, "Loading Rewarded $unit")
         val adRequest = AdRequest.Builder().build()
         RewardedAd.load(myContext!!, unit, adRequest, object : RewardedAdLoadCallback() {
             override fun onAdFailedToLoad(p0: LoadAdError) {
@@ -217,6 +206,7 @@ class GDFirebaseAdmob constructor(godot: Godot): GodotPlugin(godot) {
             mRewardedInterstitialAds.remove(unit)
         }
 
+        Log.d(TAG, "Loading RewardedInterstitial $unit")
         val adRequest = AdRequest.Builder().build()
         RewardedInterstitialAd.load(
             myContext!!,
